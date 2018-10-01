@@ -4,3 +4,17 @@ Minesweeper_Python/\.DS_Store
 Minesweeper_Student_Booklet\.pdf
 
 Minesweeper_Student-master\.zip
+
+\.idea/workspace\.xml
+
+Minesweeper_Python/src/__pycache__/Action\.cpython-36\.pyc
+
+Minesweeper_Python/src/__pycache__/AI\.cpython-36\.pyc
+
+Minesweeper_Python/src/__pycache__/ManualAI\.cpython-36\.pyc
+
+Minesweeper_Python/src/__pycache__/MyAI\.cpython-36\.pyc
+
+Minesweeper_Python/src/__pycache__/RandomAI\.cpython-36\.pyc
+
+Minesweeper_Python/src/__pycache__/World\.cpython-36\.pyc
