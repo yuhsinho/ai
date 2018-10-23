@@ -36,3 +36,17 @@ WorldGenerator/mytest/test1\.txt
 WorldGenerator/mytest/test2\.txt
 
 WorldGenerator/mytest/test3\.txt
+
+Minesweeper_Python/bin/World\.pyc
+
+Minesweeper_Python/bin/MyAI\.pyc
+
+Minesweeper_Python/bin/ManualAI\.pyc
+
+Minesweeper_Python/bin/Action\.pyc
+
+Minesweeper_Python/bin/AI\.pyc
+
+Minesweeper_Python/bin/Main\.pyc
+
+Minesweeper_Python/bin/RandomAI\.pyc
