@@ -50,3 +50,6 @@ Minesweeper_Python/bin/AI\.pyc
 Minesweeper_Python/bin/Main\.pyc
 
 Minesweeper_Python/bin/RandomAI\.pyc
+
+test*.txt
+

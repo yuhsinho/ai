@@ -128,7 +128,7 @@ class MyAI( AI ):
 	'''
 	function: addNeighbors(a, b)
 	input: given coordinate(a,b)
-	output: return a list of (a,b)'s neighbors (filter: not in frontier list and not in explored list)
+	output: return a list of (a,b)'s adjacent neighbors (filter: not in frontier list and not in explored list)
 	'''
 	def addNeighbors(self, a, b):
 		L = []
@@ -140,8 +140,8 @@ class MyAI( AI ):
 	'''
 	function: isExplored(a, b)	
 	input: given coordinate(a,b)
-	output: return a list (either empty list or (a,b))
-	--> not sure why boolean dont work that well, return true(if already explored)/false(if not explored yet)
+	output: return (a,b) if it's not explored, return empty list if it's explored
+	--> not sure why boolean dont work that well
 	'''
 	def isExplored(self, a, b):
 		L = []
@@ -197,52 +197,69 @@ class MyAI( AI ):
 			return UnrevealedSquares
 		else:
 			return []
-	'''
-	function: addTheRest()
-	input: 
-	output: return a list (either empty or a list of UnreavealedSquare)
-	'''
-	def addTheRest(self):
-		L = []
-		for a in range(self.rowDimension):
-			for b in range(self.colDimension):
-				if self.B[a, b] == -1:
-					if (a,b) not in self.flag:
-						L.append((a,b))
-		return L
 
 	'''
 	function: TotalFlag()
-	input: 
-	output: return a number (of total flag)
+	input: None
+	output: return total number of flags)
 	'''
 	def TotalFlag(self):
 		numOfFlag = 0
-		for i,j in self.flag:
+		for i, j in self.flag:
 			numOfFlag += 1
 		return numOfFlag
 
-	# '''
-	# function: RhasUnknown(a,b)
-	# input: given coordinate(a,b)
-	# output:	return
-	# if R_U contains at least one known numbered square
-	# '''
-	# # B_U as the set of all unknown squares
-	# # P_B (perimeter of B)(B_U that are adjacent to any revealved numbered square)
-	# def RhasUnknown(self, a, b):
-	# 	L = []
-	# 	for i,j in self.getNeighbors(a,b):
-	# 		if self.B[i,j] == -1:
-	# 			L.append((i,j))
-	# 	return L
-	# def Perimeter(self):
-	# 	L = []
-	# 	for a in range(self.rowDimension):
-	# 		for b in range(self.colDimension):
-	# 			for i,j in self.RhasUnknown(a,b):
-	# 				if (i,j) not in L:
-	# 					L.append((i,j))
-	# 	return L
+	'''
+	function: isCompleted()
+	input: None
+	output: return true/false
+	# If TotalFlag == totalMines, add the rest unrevealed squares to frontier list
+	'''
+	def isCompleted(self):
+		if self.totalMines == self.TotalFlag():
+			return True
+
+	'''
+	function: getUnknownSquares() (define B_U as the set of all unknown squares)
+	input: None
+	output: return a list of unknown squares
+	'''
+	def getUnknownSquares(self):
+		L = []
+		for a in range(self.rowDimension):
+			for b in range(self.colDimension):
+				if self.B[a,b] == -1 and (a,b) not in self.flag and (a,b) not in self.frontier:
+					L.append((a,b))
+		return L
+
+	'''
+	function: getPerimeter()
+	(define P_B as the set of unknown squares in B that are adjacent to any revealed numbered square)
+	input: none
+	output: return a list of P_B
+	'''
+	def getPerimeter(self):
+		L = []
+		for a, b in self.getUnknownSquares():
+			for i,j in self.getNeighbors(a,b):
+				if self.B[i,j] != -1 and (a,b) not in L:
+					L.append((a,b))
+		return L
+
+	'''
+	function: getSquaresAdjacentToP()
+	input: none
+	output: return a list of revealed numbered squares that are adjacent to PB
+	'''
+	def getSquaresAdjacentToP(self):
+		L = []
+		for a,b in self.getPerimeter():
+			for i,j in self.getNeighbors(a,b):
+				if self.B[i,j] != -1 and (i,j) not in L:
+					L.append((i,j))
+		return L
+
+	# if PB is a neighbor to revealed numbered square, add those PB to a group
+
 
 
