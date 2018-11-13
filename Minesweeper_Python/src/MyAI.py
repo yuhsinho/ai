@@ -15,6 +15,7 @@
 from AI import AI
 from Action import Action
 import numpy as np
+import random
 
 UNKNOWN = -1
 def _print(array):
@@ -68,52 +69,65 @@ class MyAI( AI ):
 		# Check if B_x,y is explored. If not, add B_x,y to explored list
 		for i,j in self.isExplored(self.x, self.y):
 			self.explored.append((i,j))
-		print("explored: ", self.explored)
+		print("Explored list: ", self.explored)
 
 		# if K(B_x,y) == 0, add R_x,y to frontier list
 		if number == 0:
 			for i,j in self.addNeighbors(self.x, self.y):
 				self.frontier.append((i,j))
-		print("frontier:", self.frontier)
 
-		# Apply Theorem 1
-		for n in range(1,9):
-			for a in range(self.rowDimension):
-				for b in range(self.colDimension):
-					if self.B[a,b] == n:
-						for i,j in self.addToFlag(a,b,n):
-							self.flag.append((i,j))
-		print("flag:", self.flag)
-
-		# Apply Theorem 2
-		for n in range(1,9):
-			for a in range(self.rowDimension):
-				for b in range(self.colDimension):
-					if self.B[a,b] == n:
-						for i,j in self.addToUncover(a,b,n):
-								self.frontier.append((i,j))
+		# apply theorems 1 and 2
+		while True:
+			applied_theorem = False
+			for i in range(self.rowDimension):
+				for j in range(self.colDimension):
+					applied_theorem |= self.apply_theorems(i,j)
+			if not applied_theorem:
+				break
 
 		# If TotalFlag == totalMines, add the rest unrevealed squares to frontier list
-		if self.totalMines == self.TotalFlag():
-			for i, j in self.addTheRest():
-				self.frontier.append((i, j))
-
-		# # for testing
-		# if (1,3) not in self.frontier and (0,2) not in self.explored and (0,2) not in self.flag:
-		# 	self.frontier.append((0,2))
-		# if (1,1) not in self.flag:
-		# 	self.flag.append((1,1))
+		if self.isCompleted():
+			for i,j in self.getUnknownSquares():
+				self.frontier.append((i,j))
 
 		if self.frontier:
 			self.x, self.y = self.frontier.pop()
+			print("FLAG LIST: ", self.flag)
 			print("NEXT CORD TO UNCOVER: (", self.x, ",", self.y, ")")
-			print("POP (", self.x, ",", self.y, ")", "ALL OTHER POSSIBLE TILES IN FRONTIER:", self.frontier)
+			print("POP (", self.x, ",", self.y, ")")
+			print("ALL OTHER POSSIBLE TILES IN FRONTIER:", self.frontier)
+			return Action(AI.Action.UNCOVER, self.x, self.y)
+
+		unknown_squares = self.getUnknownSquares()
+		if unknown_squares:
+			self.x, self.y = random.choice(self.getUnknownSquares())
 			return Action(AI.Action.UNCOVER, self.x, self.y)
 
 		return Action(AI.Action.LEAVE)
 		########################################################################
 		#							YOUR CODE ENDS							   #
 		########################################################################
+	'''
+	function: apply_theorems(a,b)
+	input: given coordinate(a,b)
+	output: return True or False
+	'''
+	def apply_theorems(self, a, b):
+		x = self.B[a,b]
+		if x == -1:
+			return False
+		#theorem 1
+		list_of_bomb_cords = self.addToFlag(a,b,x)
+		applied_theorem1 = bool(list_of_bomb_cords)
+		for i,j in list_of_bomb_cords:
+			self.flag.append((i,j))
+		#theorem 2
+		list_of_safe_unrevealed_cords = self.addToUncover(a,b,x)
+		applied_theorem2 = bool(list_of_safe_unrevealed_cords)
+		for i,j in list_of_safe_unrevealed_cords:
+			self.frontier.append((i,j))
+		return applied_theorem1 or applied_theorem2
+
 	'''
 	function: getNeighbors(a, b)
 	input: given coordinate(a,b)
@@ -218,6 +232,7 @@ class MyAI( AI ):
 	def isCompleted(self):
 		if self.totalMines == self.TotalFlag():
 			return True
+		else: return False
 
 	'''
 	function: getUnknownSquares() (define B_U as the set of all unknown squares)
@@ -258,6 +273,7 @@ class MyAI( AI ):
 				if self.B[i,j] != -1 and (i,j) not in L:
 					L.append((i,j))
 		return L
+
 
 	# if PB is a neighbor to revealed numbered square, add those PB to a group
 
