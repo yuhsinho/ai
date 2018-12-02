@@ -33,7 +33,7 @@ class MyAI( AI ):
 		self.startX, self.startY = startX, startY
 		self.totalMines = totalMines
 		# a board B and square B_x,y
-		self.B = np.array([[UNKNOWN for _ in range(colDimension)] for _ in range(rowDimension)])
+		self.B = np.array([[UNKNOWN for _ in range(rowDimension)] for _ in range(colDimension)])
 
 		# initial B_x,y is given by (startX, startY)
 		self.x, self.y = startX, startY
@@ -79,8 +79,8 @@ class MyAI( AI ):
 		# apply theorems 1 and 2
 		while True:
 			applied_theorem = False
-			for i in range(self.rowDimension):
-				for j in range(self.colDimension):
+			for i in range(self.colDimension):
+				for j in range(self.rowDimension):
 					applied_theorem |= self.apply_theorems(i,j)
 			if not applied_theorem:
 				break
@@ -241,8 +241,8 @@ class MyAI( AI ):
 	'''
 	def getUnknownSquares(self):
 		L = []
-		for a in range(self.rowDimension):
-			for b in range(self.colDimension):
+		for a in range(self.colDimension):
+			for b in range(self.rowDimension):
 				if self.B[a,b] == -1 and (a,b) not in self.flag and (a,b) not in self.frontier:
 					L.append((a,b))
 		return L
