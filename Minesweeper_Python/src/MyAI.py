@@ -108,9 +108,11 @@ class MyAI( AI ):
 				for a,b in cons[0]:
 					bomb.append((a,b))
 		for i,j in safe:
-			self.frontier.append((i,j))
+			if (i,j) not in self.frontier:
+				self.frontier.append((i,j))
 		for i,j in bomb:
-			self.flag.append((i,j))
+			if (i,j) not in self.flag:
+				self.flag.append((i,j))
 
 		# If current_total_flag == total_mines, add the rest unrevealed squares to frontier list
 		if self.isCompleted():
