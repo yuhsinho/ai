@@ -79,16 +79,13 @@ class MyAI( AI ):
 		# apply theorems 1 and 2
 		while True:
 			applied_theorem = False
-			for i in range(self.colDimension):
-				for j in range(self.rowDimension):
+			# for i in range(self.colDimension):
+			# 	for j in range(self.rowDimension):
+			for i,j in self.explored:
 					applied_theorem |= self.apply_theorems(i,j)
 			if not applied_theorem:
 				break
 
-		# If TotalFlag == totalMines, add the rest unrevealed squares to frontier list
-		if self.isCompleted():
-			for i,j in self.getUnknownSquares():
-				self.frontier.append((i,j))
 
 		if self.frontier:
 			self.x, self.y = self.frontier.pop()
@@ -98,6 +95,37 @@ class MyAI( AI ):
 			print("ALL OTHER POSSIBLE TILES IN FRONTIER:", self.frontier)
 			return Action(AI.Action.UNCOVER, self.x, self.y)
 
+		# CSP or Equation Strategy
+		all_cons = self.all_constraints()
+		self.equation_difference(all_cons)
+		safe = []
+		bomb = []
+		for cons in self.find_update_tiles(all_cons):
+			if cons[1] == 0:
+				for a, b in cons[0]:
+					safe.append((a, b))
+			if cons[1] == 1:
+				for a,b in cons[0]:
+					bomb.append((a,b))
+		for i,j in safe:
+			self.frontier.append((i,j))
+		for i,j in bomb:
+			self.flag.append((i,j))
+
+		# If current_total_flag == total_mines, add the rest unrevealed squares to frontier list
+		if self.isCompleted():
+			for i, j in self.getUnknownSquares():
+				self.frontier.append((i, j))
+
+		if self.frontier:
+			self.x, self.y = self.frontier.pop()
+			print("FLAG LIST: ", self.flag)
+			print("NEXT CORD TO UNCOVER: (", self.x, ",", self.y, ")")
+			print("POP (", self.x, ",", self.y, ")")
+			print("ALL OTHER POSSIBLE TILES IN FRONTIER:", self.frontier)
+			return Action(AI.Action.UNCOVER, self.x, self.y)
+
+		# Random choice
 		unknown_squares = self.getUnknownSquares()
 		if unknown_squares:
 			self.x, self.y = random.choice(self.getUnknownSquares())
@@ -232,7 +260,7 @@ class MyAI( AI ):
 	def isCompleted(self):
 		if self.totalMines == self.TotalFlag():
 			return True
-		else: return False
+		# else: return False
 
 	'''
 	function: getUnknownSquares() (define B_U as the set of all unknown squares)
@@ -248,34 +276,147 @@ class MyAI( AI ):
 		return L
 
 	'''
-	function: getPerimeter()
+	function: get_perimeter()
 	(define P_B as the set of unknown squares in B that are adjacent to any revealed numbered square)
 	input: none
 	output: return a list of P_B
 	'''
-	def getPerimeter(self):
+	def get_perimeter(self):
 		L = []
 		for a, b in self.getUnknownSquares():
 			for i,j in self.getNeighbors(a,b):
-				if self.B[i,j] != -1 and (a,b) not in L:
+				# revealed numbered square: explored, not in flag list?!
+				if self.B[i,j] != -1 and (a,b) not in L and (i,j) not in self.flag:
 					L.append((a,b))
 		return L
 
 	'''
-	function: getSquaresAdjacentToP()
+	function: get_revealed_adjacent_to_p()
 	input: none
 	output: return a list of revealed numbered squares that are adjacent to PB
 	'''
-	def getSquaresAdjacentToP(self):
+	def get_revealed_adjacent_to_p(self):
 		L = []
-		for a,b in self.getPerimeter():
-			for i,j in self.getNeighbors(a,b):
-				if self.B[i,j] != -1 and (i,j) not in L:
+		for a, b in self.get_perimeter():
+			for i, j in self.getNeighbors(a,b):
+				# revealed numbered square: explored, not in flag list
+				if self.B[i,j] != -1 and (i,j) not in L and (i,j) not in self.flag:
 					L.append((i,j))
 		return L
 
+	'''
+	function: get_constraint_variables()
+	input: given a cord(a,b) (a revealed square adjacent to p)
+	output: return a list of constraint variables(perimeters) vi = [ p1, p2,..]
+	'''
+	def get_constraint_variables(self, a, b):
+		perimeter_list = self.get_perimeter()
+		L = []
+		for i, j in perimeter_list:
+			if (i,j) in self.getNeighbors(a,b):
+				L.append((i,j))
+		return L
 
-	# if PB is a neighbor to revealed numbered square, add those PB to a group
+	'''
+	function: get_constraints()
+	input: given a cord(a,b) ( a revealed square adjacent to p)
+	output: return a list of constraints ci = [ [v], sum ]
+	after go through each (a,b), it will be c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] 
+	'''
+	def get_constraints(self, a, b):
+		bomb = 0
+		for i,j in self.getNeighbors(a,b):
+			if (i,j) in self.flag:
+				bomb += 1
+		sum = self.B[a,b] - bomb
+		L = []
+		L.append([self.get_constraint_variables(a,b),sum])
+		return L
+
+	'''
+		function: all_contraints()
+		input: none
+		output: a list of contraints c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] 
+		'''
+
+	def all_constraints(self):
+		cons = []
+		for i, j in self.get_revealed_adjacent_to_p():
+			for c in self.get_constraints(i, j):
+				cons.append(c)
+		return cons
+
+	'''
+	function: _print_csp(csp)
+	input: a list of constraints c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] 
+	output: simple format to check the list
+	'''
+	def _print_csp(self, csp):
+		for i in range(len(csp)):
+			print(csp[i][0], csp[i][1])
+
+	'''
+	function: equation_difference(csp)
+	input: a list of contraints c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] 
+	output: a list of updated constraints
+	'''
+	def equation_difference(self, csp):
+		for i in range(len(csp) - 1):
+			con0 = csp[i]
+			for j in range(i + 1, len(csp)):
+				con1 = csp[j]
+				if set(con0[0]) == set(con1[0]):
+					continue
+				if (set(con0[0]) & set(con1[0]) == set(con0[0])) or (set(con0[0]) & set(con1[0]) == set(con1[0])):
+					if len(con0[0]) > len(con1[0]):
+						con0[0] = list(set(con0[0]).difference(set(con1[0])))
+						con0[1] = con0[1] - con1[1]
+					elif len(con1[0]) > len(con0[0]):
+						con1[0] = list(set(con1[0]).difference(set(con0[0])))
+						con1[1] = con1[1] - con0[1]
+					# when we are in this if statement, that means ci is updated
+					# once ci is updated, repeat the function again
+					self.equation_difference(csp)
+		return csp
+
+	'''
+	function: find_updated_squares(csp)
+	input: a list of contraints c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] (after equation_difference(csp))
+	output: a list of updated square ci = [ [ [p1], 0 ], [ [p2], 1], .. ]
+	'''
+	def find_update_tiles(self, csp):
+		update_list = []
+		for i in range(len(csp)):
+			if len(csp[i][0]) == 1:
+				# [ [p1], 0 ]
+				update_list.append(csp[i])
+
+			# not sure if necessary
+			elif csp[i][1] == 0:
+				# [ [p1,p2,p3], 0]
+				update_list.append(csp[i])
+
+		return update_list
+
+	def get_unknown_without_p(self):
+		L = []
+		for i,j in self.getUnknownSquares():
+			if (i,j) not in self.get_perimeter():
+				L.append((i,j))
+		return L
 
 
+	# def update_c(self,csp):
+	# 	L = []
+	# 	for i in self.find_update_tiles(csp):
+	# 		for a,b in i[0]:
+	# 			L.append((a,b))
+	# 	return L
 
+	# def guess_corner(self):
+	# 	L = []
+	# 	corner = [(0,0), (0,self.colDimension-1), (self.rowDimension-1,0),(self.rowDimension-1, self.colDimension-1)]
+	# 	for i,j in corner:
+	# 		if (i,j) not in self.flag and (i,j) not in self.explored:
+	# 			L.append((i,j))
+	# 	return L
