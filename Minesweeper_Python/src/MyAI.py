@@ -389,8 +389,9 @@ class MyAI( AI ):
 		for i in range(len(csp)):
 			if len(csp[i][0]) == 1:
 				update_list.append(csp[i])
-				if csp[i][1] == 0:
-					update_list.append(csp[i])
+				if self.rowDimension == 8 and self.colDimension == 8:
+					if csp[i][1] == 0:
+						update_list.append(csp[i])
 		return update_list
 
 	'''
@@ -411,28 +412,28 @@ class MyAI( AI ):
 					if (a,b) not in self.flag:
 						self.flag.append((a,b))
 
-	def find_fifty(self, csp):
-		L = []
-		for i in range(len(csp)):
-			if len(csp[i][0]) == 2 and csp[i][1] == 1 and csp[i] not in L:
-				L.append(csp[i])
-		return L
-
-	def pickone(self, csp):
-		guess_to_uncover = random.choice(csp[0][0])
-		for i in csp[0][0]:
-			if i != guess_to_uncover:
-				guess_bomb = i
-		if guess_bomb not in self.flag:
-			self.flag.append(guess_bomb)
-
-		return guess_to_uncover
-	def guess(self):
-		all_cons = self.get_all_constraints()
-		self.equation_difference(all_cons)
-		cons = self.find_fifty(all_cons)
-		if cons:
-			guess = self.pickone(cons)
-			return guess
-		else: return
+	# def find_fifty(self, csp):
+	# 	L = []
+	# 	for i in range(len(csp)):
+	# 		if len(csp[i][0]) == 2 and csp[i][1] == 1 and csp[i] not in L:
+	# 			L.append(csp[i])
+	# 	return L
+	#
+	# def pickone(self, csp):
+	# 	guess_to_uncover = random.choice(csp[0][0])
+	# 	for i in csp[0][0]:
+	# 		if i != guess_to_uncover:
+	# 			guess_bomb = i
+	# 	if guess_bomb not in self.flag:
+	# 		self.flag.append(guess_bomb)
+	#
+	# 	return guess_to_uncover
+	# def guess(self):
+	# 	all_cons = self.get_all_constraints()
+	# 	self.equation_difference(all_cons)
+	# 	cons = self.find_fifty(all_cons)
+	# 	if cons:
+	# 		guess = self.pickone(cons)
+	# 		return guess
+	# 	else: return
 
