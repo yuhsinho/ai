@@ -34,7 +34,6 @@ class MyAI( AI ):
 		self.totalMines = totalMines
 		# a board B and square B_x,y
 		self.B = np.array([[UNKNOWN for _ in range(rowDimension)] for _ in range(colDimension)])
-
 		# initial B_x,y is given by (startX, startY)
 		self.x, self.y = startX, startY
 
@@ -84,31 +83,17 @@ class MyAI( AI ):
 
 		if self.frontier:
 			self.x, self.y = self.frontier.pop()
-			# print("Explored:", self.explored)
-			# print("FLAG LIST: ", self.flag)
-			# print("NEXT CORD TO UNCOVER: (", self.x, ",", self.y, ")")
-			# print("POP (", self.x, ",", self.y, ")")
-			# print("ALL OTHER POSSIBLE TILES IN FRONTIER:", self.frontier)
 			return Action(AI.Action.UNCOVER, self.x, self.y)
 
 		# Equation Strategy
-		all_cons = self.get_all_constraints()
-		self.equation_difference(all_cons)
-		safe = []
-		bomb = []
-		for cons in self.find_update_tiles(all_cons):
-			if cons[1] == 0:
-				for a, b in cons[0]:
-					safe.append((a, b))
-			if cons[1] == 1:
-				for a,b in cons[0]:
-					bomb.append((a,b))
-		for i,j in safe:
-			if (i,j) not in self.frontier:
-				self.frontier.append((i,j))
-		for i,j in bomb:
-			if (i,j) not in self.flag:
-				self.flag.append((i,j))
+		self.apply_equation_strategy()
+
+		# pick one for fifty
+		# if self.colDimension != 8 and self.rowDimension != 8:
+		# 	guess = self.guess()
+		# 	if guess:
+		# 		self.x, self.y = guess
+		# 		return Action(AI.Action.UNCOVER, self.x, self.y)
 
 		# If current_total_flag == total_mines, add the rest unrevealed squares to frontier list
 		if self.is_completed():
@@ -165,6 +150,7 @@ class MyAI( AI ):
 	input: given a cord(a,b)
 	output: a number of flag in the flag list
 	'''
+
 	def get_num_of_flag(self, a, b):
 		num = 0
 		for i,j in self.get_neighbors(a,b):
@@ -284,7 +270,6 @@ class MyAI( AI ):
 		L = []
 		for a in range(self.colDimension):
 			for b in range(self.rowDimension):
-				# if (a,b) not in self.explored and (a,b) not in self.flag and (a,b) not in self.frontier:
 				if self.B[a, b] == -1 and (a, b) not in self.flag and (a, b) not in self.frontier:
 					L.append((a,b))
 		return L
@@ -299,7 +284,6 @@ class MyAI( AI ):
 		L = []
 		for a, b in self.get_all_unknown_squares():
 			for i,j in self.get_neighbors(a,b):
-				# if (i,j) in self.explored and (a,b) not in L:
 				if self.B[i, j] != -1 and (a, b) not in L and (i, j) not in self.flag:
 					L.append((a,b))
 		return L
@@ -313,7 +297,6 @@ class MyAI( AI ):
 		L = []
 		for a, b in self.get_perimeter():
 			for i, j in self.get_neighbors(a,b):
-				# if (i,j) in self.explored and (i,j) not in L:
 				if self.B[i, j] != -1 and (i, j) not in L and (i, j) not in self.flag:
 					L.append((i,j))
 		return L
@@ -364,11 +347,22 @@ class MyAI( AI ):
 			print(csp[i][0], csp[i][1])
 
 	'''
+	function: is_assignment_complete(csp)
+	input: a list of constraints c
+	output: return True (if each ci has a single value)
+	'''
+	def is_assignment_complete(self, csp):
+		return all(len(csp[i][0]) == 1 for i in range(len(csp)))
+
+
+	'''
 	function: equation_difference(csp)
 	input: a list of constraints c = [ [ [v1], sum1 ], [ [v2], sum2 ], ...] 
 	output: a list of updated constraints
 	'''
 	def equation_difference(self, csp):
+		# if self.is_assignment_complete(csp):
+		# 	return csp
 		for i in range(len(csp) - 1):
 			con0 = csp[i]
 			for j in range(i + 1, len(csp)):
@@ -395,28 +389,50 @@ class MyAI( AI ):
 		for i in range(len(csp)):
 			if len(csp[i][0]) == 1:
 				update_list.append(csp[i])
-			# if csp[i][1] == 0:
-			# 	update_list.append(csp[i])
+				if csp[i][1] == 0:
+					update_list.append(csp[i])
 		return update_list
 
-	# def find_not_update_tiles(self, csp):
-	# 	L = []
-	# 	for i in range(len(csp)):
-	# 		if len(csp[i][0]) != 1:
-	# 			L.append(csp[i])
-	# 	return L
+	'''
+	function: apply_equation_strategy()
+	input:
+	output:
+	'''
+	def apply_equation_strategy(self):
+		all_cons = self.get_all_constraints()
+		self.equation_difference(all_cons)
+		for cons in self.find_update_tiles(all_cons):
+			if cons[1] == 0:
+				for a, b in cons[0]:
+					if (a,b) not in self.frontier:
+						self.frontier.append((a,b))
+			if cons[1] == 1:
+				for a, b in cons[0]:
+					if (a,b) not in self.flag:
+						self.flag.append((a,b))
 
 	def find_fifty(self, csp):
-		list = []
+		L = []
 		for i in range(len(csp)):
-			if len(csp[i][0]) == 2 and csp[i][1] == 1:
-				list.append(csp[i])
-		return list
+			if len(csp[i][0]) == 2 and csp[i][1] == 1 and csp[i] not in L:
+				L.append(csp[i])
+		return L
 
-	def random_choice(self, list):
-		a = random.choice(list)
-		return a
-	# def guess_list(self, csp):
-	# 	cons = self.find_fifty(csp)
-	# 	for i in range(len(csp)):
-	# 		csp[i][0]
+	def pickone(self, csp):
+		guess_to_uncover = random.choice(csp[0][0])
+		for i in csp[0][0]:
+			if i != guess_to_uncover:
+				guess_bomb = i
+		if guess_bomb not in self.flag:
+			self.flag.append(guess_bomb)
+
+		return guess_to_uncover
+	def guess(self):
+		all_cons = self.get_all_constraints()
+		self.equation_difference(all_cons)
+		cons = self.find_fifty(all_cons)
+		if cons:
+			guess = self.pickone(cons)
+			return guess
+		else: return
+
