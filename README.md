@@ -1,7 +1,7 @@
 Minesweeper project
 - Designed an algorithm using Python to uncover 1000 random worlds with n x m grid of tiles while avoiding mines
 
-I used two theorems and euqation strategy to support my AI algorithm. It was fun to think of these strategies because every player implicitly understands the logic. It was the same logic what a player will do to play the game. 
+I used two theorems and equation strategy to support my AI algorithm. It was fun to think of these strategies because every player implicitly understands the logic. It was the same logic what a player will do to play the game. 
 
 Definitions: 
 	A square is the tile which contains a bomb or number
