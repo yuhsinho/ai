@@ -1,8 +1,8 @@
-My Artificial intelligence - Minesweeper project
+My Minesweeper project
 	
-	A computer program utilizing AI methods/techniques/concepts to solve a problem.
+A computer program utilizing AI methods/techniques/concepts to solve a problem.
 
-I used two theorems and equation strategy to support my AI algorithm. It was fun to think of these strategies because every player implicitly understands the logic. It was the same logic what a player will do to play the game. 
+	I used two theorems and equation strategy to support my algorithms. It was fun to think of these strategies because every player implicitly understands the logic. It was the same logic what a player will do to play the game. 
 
 Definitions:
 
